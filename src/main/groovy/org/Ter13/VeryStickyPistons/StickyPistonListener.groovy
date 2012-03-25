@@ -32,80 +32,25 @@ public class StickyPistonListener implements Listener
 		if(!isEnabled)
 			return
 
-
-		//final ArrayList<Block> moving = new ArrayList<Block>();
-
 		List<Block> mv = event.getBlocks();
-		//ArrayList<Block> stickypistons = new ArrayList<Block>();
-		//ArrayList<Integer> distances = new ArrayList<Integer>();
 	
 		def map = calcExtendBlocks(mv)
 
-	//	def stickypistons = map["stickypistons"]
-	//	def distances     = map["distances"]
 		def moving        = map["moving"]	
 		def pistons       = map["pistons"]
 
-	
-		//Block tb;
-		//PistonBaseMaterial tp;
-		Block ta;
-		Block tm;
-		int d;
+		vspp.log.debug("[VSP] Moving? " + moving.size() )	
+		vspp.log.debug("[VSP] Pistons? " + pistons.size() )
 		
-		pistons.each { pair -> 
+		moving = extendWorker(pistons,moving)
 
-			d  = pair["dist"]
-
-		//	tp = (PistonBaseMaterial)tb.getState().getData();
-		//	ta = tb.getRelative(tp.getFacing(),1);
-			ta = getBlockRelativeToPiston(pair["piston"])
-			
-			if( (isRelativeBlockMovable(ta)) 
-				&& (!moving.contains(ta) )
-				&& (isPistonOff(ta) ) )
-			{
-				tm = ta.getRelative(event.getDirection(),1);
-				if(tm.isEmpty()||moving.contains(tm))
-				{
-					if(moving.contains(tm))
-						moving.add(moving.indexOf(tm)+1,ta);
-					else
-						moving.add(ta);
-							
-					if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
-					{
-// what this tell me is that this should be a recursive funtion..
-//XXX				//stickypistons.add(ta);
-				//distances.add(d+1);
-					}
-				}
-			}
-			//stickypistons.remove(0);
-			//distances.remove(0);
-		}
-		moving.removeAll(mv);
+		moving.removeAll(mv); //Why add them in the first place? 
 
 		final BlockFace bf = event.getDirection();
 		
-		vspp.getServer().getScheduler().scheduleSyncDelayedTask(vspp, new Runnable()
-		{
+		extendServerTask(moving, bf)
 		
-   		public void run()
-		{
-			Block b;
-			Block nb;
-
-			for(int count=0;count<moving.size();count++)
-			{
-				b = moving.get(count);
-				nb = b.getRelative(bf,1);
-				nb.setType(b.getType());
-				nb.setData(b.getData());
-				b.setType(Material.AIR);
-			}
-		 }
-		}, 0L);
+		
 	}
 
 	@EventHandler
@@ -228,9 +173,58 @@ public class StickyPistonListener implements Listener
 		return ["moving": moving, "stickypistons": stickypistons, "distances": distances, "pistons": pistons]
 	}
 
+
+	void extendServerTask(List moving, BlockFace facing){
+		vspp.getServer().getScheduler().scheduleSyncDelayedTask(vspp, new Runnable()
+		{
+		
+   		public void run()
+		{
+			Block b;
+			Block nb;
+
+			for(int count=0;count<moving.size();count++)
+			{
+				b = moving.get(count);
+				nb = b.getRelative(facing,1);
+				nb.setType(b.getType());
+				nb.setData(b.getData());
+				b.setType(Material.AIR);
+			}
+		 }
+		}, 0L);
+	}
+
 	//
 	def extendWorker( def pistons){
 			
+		pistons.each { pair -> 
+			Block ta = getBlockRelativeToPiston(pair["piston"])
+			
+			if( (isRelativeBlockMovable(ta)) 
+				&& (!moving.contains(ta) )
+				&& (isPistonOff(ta) ) )
+			{
+			
+			Block tm = ta.getRelative(event.getDirection(),1);
+			//something odd about the logic here
+				if(tm.isEmpty()||moving.contains(tm))
+				{
+					if(moving.contains(tm))
+						moving.add(moving.indexOf(tm)+1,ta);
+					else
+						moving.add(ta);
+							
+					if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
+					{
+// what this tell me is that this should be a recursive funtion..
+//XXX				//stickypistons.add(ta);
+				//distances.add(d+1);
+					}
+				}
+			}
+		}
+	return moving
 	}
 
 	Block getBlockRelativeToPiston(Block block) {
