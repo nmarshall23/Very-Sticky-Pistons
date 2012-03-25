@@ -32,8 +32,6 @@ public class StickyPistonListener implements Listener
 		if(!isEnabled)
 			return
 
-		Block tb;
-		PistonBaseMaterial tp;
 
 		//final ArrayList<Block> moving = new ArrayList<Block>();
 
@@ -43,50 +41,43 @@ public class StickyPistonListener implements Listener
 	
 		def map = calcExtendBlocks(mv)
 
-		def stickypistons = map["stickypistons"]
-		def distances     = map["distances"]
+	//	def stickypistons = map["stickypistons"]
+	//	def distances     = map["distances"]
 		def moving        = map["moving"]	
 		def pistons       = map["pistons"]
 
+	
+		//Block tb;
+		//PistonBaseMaterial tp;
 		Block ta;
 		Block tm;
 		int d;
 		
 		pistons.each { pair -> 
-		//while(stickypistons.size()!=0)
-		//{
-			d  = pair["dist"]
-			tb = pair["piston"]
 
-			tp = (PistonBaseMaterial)tb.getState().getData();
-			ta = tb.getRelative(tp.getFacing(),1);
-		/*	
-			if(ta!=null&&!ta.isEmpty()&&!ta.isLiquid()&&ta.getType()!=Material.CHEST&&ta.getType()!=Material.FURNACE&&ta.getType()!=Material.ENCHANTMENT_TABLE&&ta.getType()!=Material.BREWING_STAND&&ta.getType()!=Material.SIGN_POST&&ta.getType()!=Material.OBSIDIAN&&ta.getType()!=Material.NOTE_BLOCK&&ta.getType()!=Material.BEDROCK&&ta.getType()!=Material.DISPENSER&&ta.getType()!=Material.JUKEBOX)
-		*/
-			if(isRelativeBlockMovable(ta) )
+			d  = pair["dist"]
+
+		//	tp = (PistonBaseMaterial)tb.getState().getData();
+		//	ta = tb.getRelative(tp.getFacing(),1);
+			ta = getBlockRelativeToPiston(pair["piston"])
+			
+			if( (isRelativeBlockMovable(ta)) 
+				&& (!moving.contains(ta) )
+				&& (isPistonOff(ta) ) )
 			{
-				if(!moving.contains(ta))
+				tm = ta.getRelative(event.getDirection(),1);
+				if(tm.isEmpty()||moving.contains(tm))
 				{
-					if(((ta.getType()==Material.PISTON_STICKY_BASE||ta.getType()==Material.PISTON_BASE)&&ta.getBlockPower()==0)||ta.getPistonMoveReaction()!=PistonMoveReaction.BLOCK)
-					{
-						tm = ta.getRelative(event.getDirection(),1);
-						if(tm.isEmpty()||moving.contains(tm))
-						{
-							if(moving.contains(tm))
-							{
-								moving.add(moving.indexOf(tm)+1,ta);
-							}
-							else
-							{
-								moving.add(ta);
-							}
+					if(moving.contains(tm))
+						moving.add(moving.indexOf(tm)+1,ta);
+					else
+						moving.add(ta);
 							
-							if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
-							{
-			//XXX				//stickypistons.add(ta);
-							//distances.add(d+1);
-							}
-						}
+					if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
+					{
+// what this tell me is that this should be a recursive funtion..
+//XXX				//stickypistons.add(ta);
+				//distances.add(d+1);
 					}
 				}
 			}
@@ -238,9 +229,34 @@ public class StickyPistonListener implements Listener
 	}
 
 	//
-	def extendWorker(){
-		
+	def extendWorker( def pistons){
+			
 	}
+
+	Block getBlockRelativeToPiston(Block block) {
+		PistonBaseMaterial mat = (PistonBaseMaterial)blcok.getState().getData()
+		return block.getRelative(mat.getFacing(),1)
+	
+	}
+
+	// checks if block is a piston and that the power if off
+	// or
+	// that this block can be moved
+	boolean isPistonOff(Block block) {
+		def pistonMaterial = [Material.PISTON_STICKY_BASE, Material.PISTON_BASE]
+
+		if ( (pistonMaterial.any { m -> block.getType() == m } ) && (block.getBlockPower() == 0 ) ) {
+			return true
+		}
+		
+		if (block.getPistonMoveReaction()!=PistonMoveReaction.BLOCK) 
+		{
+			return true
+		}
+
+		return false
+	}
+
 
 	// isRelativeBlockMovable
 	// takes a block
