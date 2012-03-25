@@ -4,8 +4,9 @@ import java.util.logging.Logger;
 
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin
 
-public class VeryStickyPistons extends org.bukkit.plugin.java.JavaPlugin {
+public class VeryStickyPistons extends JavaPlugin {
 
 	
 	public Logger log;

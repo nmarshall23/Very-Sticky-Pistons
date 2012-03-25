@@ -39,10 +39,13 @@ public class StickyPistonListener implements Listener
 		def moving        = map["moving"]	
 		def pistons       = map["pistons"]
 
-		vspp.log.debug("[VSP] Moving? " + moving.size() )	
-		vspp.log.debug("[VSP] Pistons? " + pistons.size() )
+		vspp.log.info("[VSP] Extending" )	
+		vspp.log.info("[VSP] event Blocks " + mv.size() )
+		vspp.log.info("[VSP] Calc Moving " + moving.size() )	
+		vspp.log.info("[VSP] # of Pistons " + pistons.size() )
 		
 		moving = extendWorker(pistons,moving)
+		vspp.log.info("[VSP] Scan moving " + moving.size() )	
 
 		moving.removeAll(mv); //Why add them in the first place? 
 
@@ -50,6 +53,7 @@ public class StickyPistonListener implements Listener
 		
 		extendServerTask(moving, bf)
 		
+		vspp.log.info("[VSP] Extended" )	
 		
 	}
 
@@ -93,7 +97,7 @@ public class StickyPistonListener implements Listener
 					tp = (PistonBaseMaterial)tb.getState().getData();
 					ta = tb.getRelative(tp.getFacing(),1);
 					
-					if(ta!=null&&!ta.isEmpty()&&!ta.isLiquid()&&ta.getType()!=Material.CHEST&&ta.getType()!=Material.FURNACE&&ta.getType()!=Material.ENCHANTMENT_TABLE&&ta.getType()!=Material.BREWING_STAND&&ta.getType()!=Material.SIGN_POST&&ta.getType()!=Material.OBSIDIAN&&ta.getType()!=Material.NOTE_BLOCK&&ta.getType()!=Material.BEDROCK&&ta.getType()!=Material.DISPENSER&&ta.getType()!=Material.JUKEBOX)
+					if(isRelativeBlockMovable(ta) )
 					{
 						if(!moving.contains(ta))
 						{
@@ -155,44 +159,60 @@ public class StickyPistonListener implements Listener
 	//   and the distances
 	def calcExtendBlocks(List<Block> blocks) {
 		def moving        = []
-		def stickypistons = []
-		def distances     = []
 		def pistons	  = []
 		blocks.eachWithIndex { b, i ->
-			blocksToMove += b
+			moving += b
 			if((b.getType() == Material.PISTON_STICKY_BASE)
 				&& (b.getBlockPower()==0) ) 
 			{
-				stickypistons += b
-				distances     += i
 				pistons += ["piston":b,"dist":i]
 			}
 		}
-		assert stickypistons.size() == distances.size()
 		
-		return ["moving": moving, "stickypistons": stickypistons, "distances": distances, "pistons": pistons]
+		return ["moving": moving, "pistons": pistons]
 	}
 
 	void extendServerTask(List moving, BlockFace facing){
-		vspp.getServer().getScheduler().scheduleSyncDelayedTask(vspp, new Runnable()
-		{
-		
-   		public void run()
-		{
+/*		def task = {
 			Block nb;
+			moving.each { block -> 
+				nb = block.getRelative(facing,1);
+				nb.setType(block.getType());
+				nb.setData(block.getData());
+				block.setType(Material.AIR);
+			}	
+		} as Runnable
+*/
 
+		vspp.getServer().getScheduler().scheduleSyncDelayedTask(
+		vspp, 		
+	//	task,
+		new Runnable() {
+			public void run() {
+			Block nb;
 			moving.each { block -> 
 				nb = block.getRelative(facing,1);
 				nb.setType(block.getType());
 				nb.setData(block.getData());
 				block.setType(Material.AIR);
 			}
-		 }
-		}, 0L);
+			}
+		},
+	
+		0L);
 	}
 
+
+
+
+
+/*
+ *
+ * Functions for Extend
+ *
+ */
 	//
-	def extendWorker( def pistons){
+	def extendWorker( def pistons, def moving){
 			
 		pistons.each { pair -> 
 			Block ta = getBlockRelativeToPiston(pair["piston"])
@@ -224,7 +244,7 @@ public class StickyPistonListener implements Listener
 	}
 
 	Block getBlockRelativeToPiston(Block block) {
-		PistonBaseMaterial mat = (PistonBaseMaterial)blcok.getState().getData()
+		PistonBaseMaterial mat = (PistonBaseMaterial)block.getState().getData()
 		return block.getRelative(mat.getFacing(),1)
 	
 	}
@@ -251,11 +271,17 @@ public class StickyPistonListener implements Listener
 	// isRelativeBlockMovable
 	// takes a block
 	boolean isRelativeBlockMovable(Block block) {
-		def notMovableMaterial = [Material.CHEST,Material.FURNACE,Material.ENCHANTMENT_TABLE,Material.BREWING_STAND,Material.SIGN_POST,Material.OBSIDIAN, Material.NOTE_BLOCK, Material.BEDROCK, Material.DISPENSER, Material.JUKEBOX]
+		def notMovableMaterial = [Material.CHEST,
+			Material.FURNACE, Material.ENCHANTMENT_TABLE,
+			Material.BREWING_STAND, Material.SIGN_POST,
+			Material.OBSIDIAN, Material.NOTE_BLOCK, 
+			Material.BEDROCK, Material.DISPENSER, 
+			Material.JUKEBOX ]
+
 		if ((block == null) || block.isEmpty() || block.isLiquid() ) 
 			return false
 
-		if (notMovableMaterial.any { ta.getType() }) 
+		if (notMovableMaterial.any { block.getType() == it }) 
 			return false
 
 		return true
