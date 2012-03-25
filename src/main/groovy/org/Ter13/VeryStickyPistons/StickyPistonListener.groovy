@@ -35,37 +35,35 @@ public class StickyPistonListener implements Listener
 		Block tb;
 		PistonBaseMaterial tp;
 
-		final ArrayList<Block> moving = new ArrayList<Block>();
+		//final ArrayList<Block> moving = new ArrayList<Block>();
 
 		List<Block> mv = event.getBlocks();
-		ArrayList<Block> stickypistons = new ArrayList<Block>();
-		ArrayList<Integer> distances = new ArrayList<Integer>();
+		//ArrayList<Block> stickypistons = new ArrayList<Block>();
+		//ArrayList<Integer> distances = new ArrayList<Integer>();
+	
+		def map = calcExtendBlocks(mv)
 
-		mv.eachWithIndex { b, i -> 
-			moving.add(b)
-			if(b.getType() == Material.PISTON_STICKY_BASE)
-			{
-				if(b.getBlockPower()==0)
-				{
-					stickypistons.add(b)
-					distances.add(i)
-				}
-			}
-		}
+		def stickypistons = map["stickypistons"]
+		def distances     = map["distances"]
+		def moving        = map["moving"]	
+		def pistons       = map["pistons"]
 
 		Block ta;
 		Block tm;
 		int d;
+		
+		pistons.each { pair -> 
+		//while(stickypistons.size()!=0)
+		//{
+			d  = pair["dist"]
+			tb = pair["piston"]
 
-		while(stickypistons.size()!=0)
-		{
-			d = distances.get(0);
-
-			tb = stickypistons.get(0);
 			tp = (PistonBaseMaterial)tb.getState().getData();
 			ta = tb.getRelative(tp.getFacing(),1);
-			
+		/*	
 			if(ta!=null&&!ta.isEmpty()&&!ta.isLiquid()&&ta.getType()!=Material.CHEST&&ta.getType()!=Material.FURNACE&&ta.getType()!=Material.ENCHANTMENT_TABLE&&ta.getType()!=Material.BREWING_STAND&&ta.getType()!=Material.SIGN_POST&&ta.getType()!=Material.OBSIDIAN&&ta.getType()!=Material.NOTE_BLOCK&&ta.getType()!=Material.BEDROCK&&ta.getType()!=Material.DISPENSER&&ta.getType()!=Material.JUKEBOX)
+		*/
+			if(isRelativeBlockMovable(ta) )
 			{
 				if(!moving.contains(ta))
 				{
@@ -85,15 +83,15 @@ public class StickyPistonListener implements Listener
 							
 							if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
 							{
-								stickypistons.add(ta);
-								distances.add(d+1);
+			//XXX				//stickypistons.add(ta);
+							//distances.add(d+1);
 							}
 						}
 					}
 				}
 			}
-			stickypistons.remove(0);
-			distances.remove(0);
+			//stickypistons.remove(0);
+			//distances.remove(0);
 		}
 		moving.removeAll(mv);
 
@@ -214,10 +212,16 @@ public class StickyPistonListener implements Listener
 		}
 	}
 
+	// Takes a list of Blocks that will be effected by the ExtendEvent
+	// Returns three lists
+	//   Blocks that will be moving
+	//   Stickypistons 
+	//   and the distances
 	def calcExtendBlocks(List<Block> blocks) {
 		def moving        = []
 		def stickypistons = []
 		def distances     = []
+		def pistons	  = []
 		blocks.eachWithIndex { b, i ->
 			blocksToMove += b
 			if((b.getType() == Material.PISTON_STICKY_BASE)
@@ -225,11 +229,29 @@ public class StickyPistonListener implements Listener
 			{
 				stickypistons += b
 				distances     += i
+				pistons += ["piston":b,"dist":i]
 			}
 		}
 		assert stickypistons.size() == distances.size()
 		
-		return ["moving": moving, "stickypistons": stickypistons, "distances": distances]
-	}	
+		return ["moving": moving, "stickypistons": stickypistons, "distances": distances, "pistons": pistons]
+	}
 
+	//
+	def extendWorker(){
+		
+	}
+
+	// isRelativeBlockMovable
+	// takes a block
+	boolean isRelativeBlockMovable(Block block) {
+		def notMovableMaterial = [Material.CHEST,Material.FURNACE,Material.ENCHANTMENT_TABLE,Material.BREWING_STAND,Material.SIGN_POST,Material.OBSIDIAN, Material.NOTE_BLOCK, Material.BEDROCK, Material.DISPENSER, Material.JUKEBOX]
+		if ((block == null) || block.isEmpty() || block.isLiquid() ) 
+			return false
+
+		if (notMovableMaterial.any { ta.getType() }) 
+			return false
+
+		return true
+	}
 }
