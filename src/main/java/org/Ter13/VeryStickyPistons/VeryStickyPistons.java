@@ -24,8 +24,10 @@ public class VeryStickyPistons extends org.bukkit.plugin.java.JavaPlugin {
 		PluginManager pm = this.getServer().getPluginManager();
 		spl = new StickyPistonListener(this);
 		spl.isEnabled = true;
-		pm.registerEvent(Event.Type.BLOCK_PISTON_EXTEND, spl, Event.Priority.Normal, this);
-		pm.registerEvent(Event.Type.BLOCK_PISTON_RETRACT, spl, Event.Priority.Normal, this);
+		pm.registerEvents(spl, this);
+
+	//	pm.registerEvent(Event.Type.BLOCK_PISTON_EXTEND, spl, Event.Priority.Normal, this);
+	//	pm.registerEvent(Event.Type.BLOCK_PISTON_RETRACT, spl, Event.Priority.Normal, this);
 		log.info("[VSP] Pistons are now very sticky.");
 	}
 

@@ -5,18 +5,20 @@ import java.util.List;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.PistonMoveReaction;
-import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.material.PistonBaseMaterial;
 
-public class StickyPistonListener extends BlockListener
+public class StickyPistonListener implements Listener
 {
 	public VeryStickyPistons vspp;
 	public boolean isEnabled;
+
 	
 	public StickyPistonListener(VeryStickyPistons pg)
 	{
@@ -24,6 +26,7 @@ public class StickyPistonListener extends BlockListener
 		isEnabled = false;
 	}
 
+	@EventHandler
 	public void onBlockPistonExtend(BlockPistonExtendEvent event)
 	{	
 		if(!isEnabled)
@@ -120,6 +123,7 @@ public class StickyPistonListener extends BlockListener
 		}, 0L);
 	}
 
+	@EventHandler
 	public void onBlockPistonRetract(BlockPistonRetractEvent event)
 	{
 		if(!isEnabled)
