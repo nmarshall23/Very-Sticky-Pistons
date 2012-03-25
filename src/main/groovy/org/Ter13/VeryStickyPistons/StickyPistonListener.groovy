@@ -173,23 +173,19 @@ public class StickyPistonListener implements Listener
 		return ["moving": moving, "stickypistons": stickypistons, "distances": distances, "pistons": pistons]
 	}
 
-
 	void extendServerTask(List moving, BlockFace facing){
 		vspp.getServer().getScheduler().scheduleSyncDelayedTask(vspp, new Runnable()
 		{
 		
    		public void run()
 		{
-			Block b;
 			Block nb;
 
-			for(int count=0;count<moving.size();count++)
-			{
-				b = moving.get(count);
-				nb = b.getRelative(facing,1);
-				nb.setType(b.getType());
-				nb.setData(b.getData());
-				b.setType(Material.AIR);
+			moving.each { block -> 
+				nb = block.getRelative(facing,1);
+				nb.setType(block.getType());
+				nb.setData(block.getData());
+				block.setType(Material.AIR);
 			}
 		 }
 		}, 0L);
