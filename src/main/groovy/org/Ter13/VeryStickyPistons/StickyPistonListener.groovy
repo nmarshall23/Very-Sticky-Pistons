@@ -216,6 +216,7 @@ public class StickyPistonListener implements Listener
 			
 		pistons.each { pair -> 
 			Block ta = getBlockRelativeToPiston(pair["piston"])
+			int d = pair["dist"]
 			
 			if( (isRelativeBlockMovable(ta)) 
 				&& (!moving.contains(ta) )
@@ -236,6 +237,8 @@ public class StickyPistonListener implements Listener
 // what this tell me is that this should be a recursive funtion..
 //XXX				//stickypistons.add(ta);
 				//distances.add(d+1);
+				pistons << ["piston":ta,"dist":d+1]
+				
 					}
 				}
 			}
