@@ -1,0 +1,17 @@
+I forked VeryStickyPistons, and refactored it into Groovy.
+
+I hoped that by using Groovy, I could find the few bugs in the code.
+Also this code was very hairy. I hope by refactoring it, I can show other Minecraft Bukkit, plugin writers how awesome Groovy is.
+
+
+BUGS
+
+* place two pistons next to each other, Then one, laying across. place a block on it, so that the block could be sticking to one of the first pistons. That block will be replaced with air.
+
+Here is a diagram kinda showing it.
+P1->B
+P2->^P3
+
+That B is a block, after a Piston P1 will act funny then replace that block with air.
+
+I know why this bug happens. Still refactoring to remove the hairiness.
