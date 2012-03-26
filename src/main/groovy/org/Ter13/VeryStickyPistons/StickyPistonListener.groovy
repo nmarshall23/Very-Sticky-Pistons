@@ -39,31 +39,22 @@ public class StickyPistonListener implements Listener
 		def moving        = map["moving"]	
 		def pistons       = map["pistons"]
 
-		vspp.log.info("[VSP] Extending" )	
-		vspp.log.info("[VSP] event Blocks " + mv.size() )
-		vspp.log.info("[VSP] Calc Moving " + moving.size() )	
-		vspp.log.info("[VSP] # of Pistons " + pistons.size() )
 		
 		moving = extendWorker(pistons,moving)
-		vspp.log.info("[VSP] Scan moving " + moving.size() )	
 
 		moving.removeAll(mv); //Why add them in the first place? 
 
 		final BlockFace bf = event.getDirection();
 		
 		extendServerTask(moving, bf)
-		
-		vspp.log.info("[VSP] Extended" )	
-		
 	}
 
 	@EventHandler
 	public void onBlockPistonRetract(BlockPistonRetractEvent event)
 	{
 		if(!isEnabled)
-		{
 			return;
-		}
+		
 		Block tb;
 		PistonBaseMaterial tp;
 
@@ -75,58 +66,58 @@ public class StickyPistonListener implements Listener
 		Location loc = event.getRetractLocation();
 		tb = loc.getBlock();
 		Block pb;
-		if(tb.getType()==Material.PISTON_STICKY_BASE)
+
+		
+		if(isPistonOff(tb) )
 		{
-			if(tb.getBlockPower()==0)
-			{
-				stickypistons.add(tb);
-				pb = tb;
-				moving.add(pb);
-				distances.add(2);
-		
-		
-				Block ta;
-				Block tm;
-				int d;
+			stickypistons.add(tb);
+			pb = tb;
+			moving.add(pb);
+			distances.add(2);
+	
+	
+			Block ta;
+			Block tm;
+			int d;
 				
-				while(stickypistons.size()!=0)
+			while(stickypistons.size()!=0)
+			{
+				d = distances.get(0);
+	
+				tb = stickypistons.get(0);
+				tp = (PistonBaseMaterial)tb.getState().getData();
+				ta = tb.getRelative(tp.getFacing(),1);
+				
+				if(isRelativeBlockMovable(ta) )
 				{
-					d = distances.get(0);
-		
-					tb = stickypistons.get(0);
-					tp = (PistonBaseMaterial)tb.getState().getData();
-					ta = tb.getRelative(tp.getFacing(),1);
-					
-					if(isRelativeBlockMovable(ta) )
+					if(!moving.contains(ta))
 					{
-						if(!moving.contains(ta))
+						if(((ta.getType()==Material.PISTON_STICKY_BASE||ta.getType()==Material.PISTON_BASE)&&ta.getBlockPower()==0)||ta.getPistonMoveReaction()==PistonMoveReaction.MOVE)
 						{
-							if(((ta.getType()==Material.PISTON_STICKY_BASE||ta.getType()==Material.PISTON_BASE)&&ta.getBlockPower()==0)||ta.getPistonMoveReaction()==PistonMoveReaction.MOVE)
+							tm = ta.getRelative(event.getDirection().getOppositeFace(),1);
+							if(tm.isEmpty()||moving.contains(tm))
 							{
-								tm = ta.getRelative(event.getDirection().getOppositeFace(),1);
-								if(tm.isEmpty()||moving.contains(tm))
+								if(moving.contains(tm))
 								{
-									if(moving.contains(tm))
-									{
-										moving.add(moving.indexOf(tm)+1,ta);
-									}
-									else
-									{
-										moving.add(ta);
-									}
-								
-									if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
-									{
-										stickypistons.add(ta);
-										distances.add(d+1);
-									}
+									moving.add(moving.indexOf(tm)+1,ta);
+								}
+								else
+								{
+									moving.add(ta);
+								}
+							
+								if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
+								{
+									stickypistons.add(ta);
+									distances.add(d+1);
 								}
 							}
 						}
 					}
-					stickypistons.remove(0);
-					distances.remove(0);
 				}
+				stickypistons.remove(0);
+				distances.remove(0);
+			}
 				moving.remove(pb);
 				final BlockFace bf = (event.getDirection()).getOppositeFace();
 				
@@ -148,7 +139,7 @@ public class StickyPistonListener implements Listener
 						}
 					 }
 				}, 0L);
-			}
+			
 		}
 	}
 
@@ -173,7 +164,7 @@ public class StickyPistonListener implements Listener
 	}
 
 	void extendServerTask(List moving, BlockFace facing){
-/*		def task = {
+		def task = {
 			Block nb;
 			moving.each { block -> 
 				nb = block.getRelative(facing,1);
@@ -182,33 +173,34 @@ public class StickyPistonListener implements Listener
 				block.setType(Material.AIR);
 			}	
 		} as Runnable
-*/
 
 		vspp.getServer().getScheduler().scheduleSyncDelayedTask(
 		vspp, 		
-	//	task,
-		new Runnable() {
-			public void run() {
-			Block nb;
-			moving.each { block -> 
-				nb = block.getRelative(facing,1);
-				nb.setType(block.getType());
-				nb.setData(block.getData());
-				block.setType(Material.AIR);
-			}
-			}
-		},
-	
+		task,
+
 		0L);
 	}
 
 
+/*
+ *
+ * Refactored functions from Retract
+ *
+ */
 
-
+	boolean isPistonOff(Block block) {
+		if ( (block.getType()==Material.PISTON_STICKY_BASE)
+		     &&
+		     (block.getBlockPower()==0) )
+		{
+			return true
+		}
+			return false
+	}
 
 /*
  *
- * Functions for Extend
+ * Refactored functions from Extend
  *
  */
 	//
@@ -269,6 +261,13 @@ public class StickyPistonListener implements Listener
 
 		return false
 	}
+
+
+/*
+ *
+ * Refactored functions shared
+ *
+ */
 
 
 	// isRelativeBlockMovable
