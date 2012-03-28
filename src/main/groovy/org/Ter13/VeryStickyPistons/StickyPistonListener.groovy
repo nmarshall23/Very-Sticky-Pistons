@@ -68,7 +68,7 @@ public class StickyPistonListener implements Listener
 		Block pb;
 
 		
-		if(isPistonOff(tb) )
+		if(isStickyPistonOff(tb) )
 		{
 			stickypistons.add(tb);
 			pb = tb;
@@ -121,26 +121,26 @@ public class StickyPistonListener implements Listener
 				moving.remove(pb);
 				final BlockFace bf = (event.getDirection()).getOppositeFace();
 				
-				vspp.getServer().getScheduler().scheduleSyncDelayedTask(vspp, new Runnable()
-				{
-
-   					public void run()
-					{
-						Block b;
-						Block nb;
-						
-						for(int count=0;count<moving.size();count++)
-						{
-							b = moving.get(count);
-							nb = b.getRelative(bf,1);
-							nb.setType(b.getType());
-							nb.setData(b.getData());
-							b.setType(Material.AIR);
-						}
-					 }
-				}, 0L);
-			
+				
+				retractServerTask(moving,bf)	
 		}
+	}
+
+
+	void retractServerTask(List moving,BlockFace facing) {
+		def task = {
+			moving.each { b ->
+				Block nb = b.getRelative(facing,1);
+				nb.setType(b.getType());
+				nb.setData(b.getData());
+				b.setType(Material.AIR);
+			}
+		}
+		
+		vspp.getServer().getScheduler().scheduleSyncDelayedTask(
+			vspp,
+			task,
+			0L);
 	}
 
 	// Takes a list of Blocks that will be effected by the ExtendEvent
@@ -163,6 +163,10 @@ public class StickyPistonListener implements Listener
 		return ["moving": moving, "pistons": pistons]
 	}
 
+/**
+ *
+ *
+ */
 	void extendServerTask(List moving, BlockFace facing){
 		def task = {
 			Block nb;
@@ -188,7 +192,7 @@ public class StickyPistonListener implements Listener
  *
  */
 
-	boolean isPistonOff(Block block) {
+	boolean isStickyPistonOff(Block block) {
 		if ( (block.getType()==Material.PISTON_STICKY_BASE)
 		     &&
 		     (block.getBlockPower()==0) )
@@ -227,6 +231,7 @@ public class StickyPistonListener implements Listener
 					if(ta.getType()==Material.PISTON_STICKY_BASE&&d<12)
 					{
 // what this tell me is that this should be a recursive funtion..
+//however this seems to work
 //XXX				//stickypistons.add(ta);
 				//distances.add(d+1);
 				pistons << ["piston":ta,"dist":d+1]
@@ -238,6 +243,8 @@ public class StickyPistonListener implements Listener
 	return moving
 	}
 
+
+//
 	Block getBlockRelativeToPiston(Block block) {
 		PistonBaseMaterial mat = (PistonBaseMaterial)block.getState().getData()
 		return block.getRelative(mat.getFacing(),1)
@@ -248,9 +255,12 @@ public class StickyPistonListener implements Listener
 	// or
 	// that this block can be moved
 	boolean isPistonOff(Block block) {
-		def pistonMaterial = [Material.PISTON_STICKY_BASE, Material.PISTON_BASE]
+		def pistonMaterial = [Material.PISTON_STICKY_BASE, 
+				      Material.PISTON_BASE ]
 
-		if ( (pistonMaterial.any { m -> block.getType() == m } ) && (block.getBlockPower() == 0 ) ) {
+		if ( (pistonMaterial.any { m -> block.getType() == m } )
+		    &&
+		   (block.getBlockPower() == 0 ) ) {
 			return true
 		}
 		
