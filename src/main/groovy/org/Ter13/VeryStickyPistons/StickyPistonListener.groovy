@@ -46,7 +46,7 @@ public class StickyPistonListener implements Listener
 
 		final BlockFace bf = event.getDirection();
 		
-		extendServerTask(moving, bf)
+		ServerTask(moving, bf)
 	}
 
 	@EventHandler
@@ -120,28 +120,10 @@ public class StickyPistonListener implements Listener
 			}
 				moving.remove(pb);
 				final BlockFace bf = (event.getDirection()).getOppositeFace();
-				
-				
-				retractServerTask(moving,bf)	
+				ServerTask(moving,bf)	
 		}
 	}
 
-
-	void retractServerTask(List moving,BlockFace facing) {
-		def task = {
-			moving.each { b ->
-				Block nb = b.getRelative(facing,1);
-				nb.setType(b.getType());
-				nb.setData(b.getData());
-				b.setType(Material.AIR);
-			}
-		}
-		
-		vspp.getServer().getScheduler().scheduleSyncDelayedTask(
-			vspp,
-			task,
-			0L);
-	}
 
 	// Takes a list of Blocks that will be effected by the ExtendEvent
 	// Returns three lists
@@ -161,28 +143,6 @@ public class StickyPistonListener implements Listener
 		}
 		
 		return ["moving": moving, "pistons": pistons]
-	}
-
-/**
- *
- *
- */
-	void extendServerTask(List moving, BlockFace facing){
-		def task = {
-			Block nb;
-			moving.each { block -> 
-				nb = block.getRelative(facing,1);
-				nb.setType(block.getType());
-				nb.setData(block.getData());
-				block.setType(Material.AIR);
-			}	
-		} as Runnable
-
-		vspp.getServer().getScheduler().scheduleSyncDelayedTask(
-		vspp, 		
-		task,
-
-		0L);
 	}
 
 
@@ -279,6 +239,22 @@ public class StickyPistonListener implements Listener
  *
  */
 
+
+	void ServerTask(List moving,BlockFace facing) {
+		def task = {
+			moving.each { b ->
+				Block nb = b.getRelative(facing,1);
+				nb.setType(b.getType());
+				nb.setData(b.getData());
+				b.setType(Material.AIR);
+			}
+		}
+
+		vspp.getServer().getScheduler().scheduleSyncDelayedTask(
+			vspp,
+			task,
+			0L);
+	}
 
 	// isRelativeBlockMovable
 	// takes a block
